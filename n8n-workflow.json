@@ -1,0 +1,191 @@
+{
+  "name": "AI Resume Generator",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "generate-resume",
+        "responseMode": "responseNode",
+        "options": {
+          "allowedOrigins": "*"
+        }
+      },
+      "id": "webhook-node",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [240, 300],
+      "webhookId": "generate-resume"
+    },
+    {
+      "parameters": {
+        "jsCode": "// ============================================\n// BUILD GEMINI PROMPT from user input\n// ============================================\n\nconst input = $input.first().json.body;\n\n// Format projects\nconst projectsText = (input.projects || []).map((p, i) => {\n  let line = `  ${i + 1}. ${p.name}: ${p.description}`;\n  if (p.repoLink) line += ` | Repo: ${p.repoLink}`;\n  return line;\n}).join('\\n');\n\n// Format experience\nconst experienceText = (input.experience || []).length > 0\n  ? (input.experience || []).map((e, i) => {\n      let line = `  ${i + 1}. ${e.title} at ${e.company}`;\n      if (e.duration) line += ` (${e.duration})`;\n      if (e.location) line += ` — ${e.location}`;\n      if (e.description) line += `\\n     ${e.description}`;\n      return line;\n    }).join('\\n')\n  : '  No formal work experience yet (fresh graduate / student)';\n\n// Format skills\nconst skillsText = Array.isArray(input.skills) ? input.skills.join(', ') : input.skills;\n\n// Build the prompt\nconst prompt = `You are an expert ATS-optimized resume writer with 15 years of experience in HR and recruiting.\n\nCANDIDATE PROFILE:\n- Full Name: ${input.name}\n- Email: ${input.email} | Phone: ${input.phone}\n- GitHub: ${input.github || 'N/A'} | LinkedIn: ${input.linkedin || 'N/A'}\n- City: ${input.city}\n- Education:\n  - School: ${input.school}\n  - College: ${input.college} (Year: ${input.collegeYear})\n  - 12th Standard Percentage: ${input.twelfthPercentage}%\n  - CGPA: ${input.cgpa}\n- Languages Known: ${input.languages}\n- Technical Skills: ${skillsText}\n- Projects:\n${projectsText}\n- Work Experience:\n${experienceText}\n\nTARGET JOB DESCRIPTION:\n${input.jobDescription}\n\nINSTRUCTIONS:\n1. Carefully analyze the job description above and extract all key skills, tools, technologies, frameworks, and keywords.\n2. Match them against the candidate's profile — prioritize relevant skills and projects.\n3. Generate a tailored, ATS-friendly, professional resume.\n4. Resume sections (in order): Contact Header → Professional Summary (3-4 lines) → Technical Skills → Projects → Work Experience (if any) → Education → Languages\n5. In the Professional Summary, weave in keywords from the job description naturally.\n6. For Projects, emphasize technologies and outcomes that match the job requirements.\n7. Use strong action verbs (Developed, Implemented, Designed, Optimized, Deployed, etc.).\n8. Add quantifiable results where reasonable (e.g., \"reduced load time by 40%\").\n\nFORMATTING & OUTPUT RULES:\n- Return ONLY clean, valid HTML — nothing else.\n- Use inline CSS styles on every element (the HTML will be converted to DOCX, so no external CSS).\n- Use a single-column layout for maximum ATS compatibility.\n- Font: Calibri or Arial, size 11pt for body, 14pt for name, 12pt for section headings.\n- Use a clean, modern, professional design with adequate spacing.\n- Section headings should have a bottom border (border-bottom: 2px solid #2c3e50).\n- Use bullet points (ul/li) for skills, project details, and experience points.\n- Do NOT use tables for layout.\n- Do NOT include images, icons, or special characters.\n- Do NOT wrap output in markdown code fences.\n- Start with <!DOCTYPE html> and end with </html>.`;\n\n// Store both the prompt and the original input (for filename later)\nreturn [{\n  json: {\n    prompt: prompt,\n    candidateName: input.name\n  }\n}];"
+      },
+      "id": "build-prompt-node",
+      "name": "Build Prompt",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [480, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=YOUR_GEMINI_API_KEY",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"contents\": [\n    {\n      \"role\": \"user\",\n      \"parts\": [\n        {\n          \"text\": {{ JSON.stringify($json.prompt) }}\n        }\n      ]\n    }\n  ],\n  \"generationConfig\": {\n    \"temperature\": 0.7,\n    \"maxOutputTokens\": 8192\n  }\n}",
+        "options": {
+          "timeout": 60000
+        }
+      },
+      "id": "gemini-api-node",
+      "name": "Gemini API",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [720, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// ============================================\n// EXTRACT clean HTML from Gemini response\n// ============================================\n\nconst response = $input.first().json;\nconst candidateName = $('Build Prompt').first().json.candidateName;\n\n// Navigate the Gemini response structure\nlet htmlContent = '';\n\ntry {\n  htmlContent = response.candidates[0].content.parts[0].text;\n} catch (e) {\n  throw new Error('Failed to extract text from Gemini response: ' + JSON.stringify(response).substring(0, 500));\n}\n\n// Clean up: remove markdown code fences if present\nhtmlContent = htmlContent.replace(/^```html\\s*/i, '').replace(/^```\\s*/i, '').replace(/\\s*```$/i, '').trim();\n\n// Ensure it starts with <!DOCTYPE html>\nif (!htmlContent.toLowerCase().startsWith('<!doctype')) {\n  // If Gemini returned just the body, wrap it\n  htmlContent = `<!DOCTYPE html>\\n<html>\\n<head><meta charset=\"utf-8\"><title>${candidateName} Resume</title></head>\\n<body>${htmlContent}</body>\\n</html>`;\n}\n\nreturn [{\n  json: {\n    html: htmlContent,\n    candidateName: candidateName\n  }\n}];"
+      },
+      "id": "extract-html-node",
+      "name": "Extract HTML",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [960, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://localhost:3456/convert",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ html: $json.html }) }}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file"
+            }
+          },
+          "timeout": 30000
+        }
+      },
+      "id": "convert-docx-node",
+      "name": "Convert to DOCX",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1200, 300]
+    },
+    {
+      "parameters": {
+        "respondWith": "binary",
+        "responseBinaryPropertyName": "data",
+        "options": {
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Content-Disposition",
+                "value": "=attachment; filename=\"{{ $('Build Prompt').first().json.candidateName.replace(/\\s+/g, '_') }}_Resume.docx\""
+              },
+              {
+                "name": "Content-Type",
+                "value": "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+              },
+              {
+                "name": "Access-Control-Allow-Origin",
+                "value": "*"
+              }
+            ]
+          }
+        }
+      },
+      "id": "respond-webhook-node",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [1440, 300]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Build Prompt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Prompt": {
+      "main": [
+        [
+          {
+            "node": "Gemini API",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gemini API": {
+      "main": [
+        [
+          {
+            "node": "Extract HTML",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract HTML": {
+      "main": [
+        [
+          {
+            "node": "Convert to DOCX",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convert to DOCX": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "tags": []
+}

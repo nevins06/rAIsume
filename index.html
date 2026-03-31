@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="AI-powered resume generator — paste a job description, get a tailored ATS-friendly resume in seconds.">
+  <title>AI Resume Generator</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📄</text></svg>">
+</head>
+<body>
+
+  <!-- Background Effects -->
+  <div class="bg-gradient"></div>
+  <div class="bg-grid"></div>
+  <div class="bg-orb bg-orb--1"></div>
+  <div class="bg-orb bg-orb--2"></div>
+  <div class="bg-orb bg-orb--3"></div>
+
+  <div class="app-container">
+
+    <!-- Header -->
+    <header class="app-header">
+      <div class="app-header__icon">📄</div>
+      <h1 class="app-header__title">AI Resume Generator</h1>
+      <p class="app-header__subtitle">Paste a job description + your details — get a professionally tailored, ATS-optimized resume in seconds.</p>
+    </header>
+
+    <!-- Form -->
+    <form id="resumeForm" novalidate>
+
+      <!-- ===== PERSONAL INFO ===== -->
+      <section class="form-section" id="section-personal">
+        <div class="form-section__header">
+          <div class="form-section__icon">👤</div>
+          <div>
+            <h2 class="form-section__title">Personal Information</h2>
+            <p class="form-section__subtitle">Basic contact details for your resume header</p>
+          </div>
+        </div>
+
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label" for="name">Full Name</label>
+            <input class="form-input" type="text" id="name" name="name" placeholder="e.g. John Doe" required>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="email">Email</label>
+            <input class="form-input" type="email" id="email" name="email" placeholder="e.g. john@example.com" required>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="phone">Phone</label>
+            <input class="form-input" type="tel" id="phone" name="phone" placeholder="e.g. +91 98765 43210" required>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="city">City</label>
+            <input class="form-input" type="text" id="city" name="city" placeholder="e.g. Mumbai" required>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="github">GitHub</label>
+            <input class="form-input" type="url" id="github" name="github" placeholder="e.g. https://github.com/johndoe">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="linkedin">LinkedIn</label>
+            <input class="form-input" type="url" id="linkedin" name="linkedin" placeholder="e.g. https://linkedin.com/in/johndoe">
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== EDUCATION ===== -->
+      <section class="form-section" id="section-education">
+        <div class="form-section__header">
+          <div class="form-section__icon">🎓</div>
+          <div>
+            <h2 class="form-section__title">Education</h2>
+            <p class="form-section__subtitle">Academic background and achievements</p>
+          </div>
+        </div>
+
+        <div class="form-grid">
+          <div class="form-group form-group--full">
+            <label class="form-label" for="school">School Name</label>
+            <input class="form-input" type="text" id="school" name="school" placeholder="e.g. Delhi Public School" required>
+          </div>
+
+          <div class="form-group form-group--full">
+            <label class="form-label" for="college">College Name</label>
+            <input class="form-input" type="text" id="college" name="college" placeholder="e.g. IIT Bombay" required>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="collegeYear">Year / Expected Year</label>
+            <input class="form-input" type="text" id="collegeYear" name="collegeYear" placeholder="e.g. 2024 or 2025 (Expected)" required>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="twelfthPercentage">12th Percentage</label>
+            <input class="form-input" type="text" id="twelfthPercentage" name="twelfthPercentage" placeholder="e.g. 92.5" required>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="cgpa">CGPA</label>
+            <input class="form-input" type="text" id="cgpa" name="cgpa" placeholder="e.g. 8.7" required>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== LANGUAGES ===== -->
+      <section class="form-section" id="section-languages">
+        <div class="form-section__header">
+          <div class="form-section__icon">🌐</div>
+          <div>
+            <h2 class="form-section__title">Languages Known</h2>
+            <p class="form-section__subtitle">Languages you can speak, read, or write</p>
+          </div>
+        </div>
+
+        <div class="form-grid form-grid--single">
+          <div class="form-group">
+            <label class="form-label" for="languages">Languages</label>
+            <input class="form-input" type="text" id="languages" name="languages" placeholder="e.g. English, Hindi, Tamil" required>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== SKILLS ===== -->
+      <section class="form-section" id="section-skills">
+        <div class="form-section__header">
+          <div class="form-section__icon">⚡</div>
+          <div>
+            <h2 class="form-section__title">Skills</h2>
+            <p class="form-section__subtitle">Technical and soft skills — type and press Enter to add</p>
+          </div>
+        </div>
+
+        <div class="form-grid form-grid--single">
+          <div class="form-group">
+            <label class="form-label" for="skillInput">Add Skills</label>
+            <div class="skills-input-wrapper" id="skillsWrapper">
+              <input class="skills-text-input" type="text" id="skillInput" placeholder="Type a skill and press Enter…">
+            </div>
+            <span class="skills-hint">Press <strong>Enter</strong> or <strong>comma</strong> to add. Click × to remove.</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== PROJECTS ===== -->
+      <section class="form-section" id="section-projects">
+        <div class="form-section__header">
+          <div class="form-section__icon">🚀</div>
+          <div>
+            <h2 class="form-section__title">Projects</h2>
+            <p class="form-section__subtitle">Showcase your best work with descriptions and repo links</p>
+          </div>
+        </div>
+
+        <div class="dynamic-list" id="projectsList">
+          <!-- Project items inserted by JS -->
+        </div>
+        <button type="button" class="btn-add" id="addProjectBtn">
+          <span>＋</span> Add Project
+        </button>
+      </section>
+
+      <!-- ===== EXPERIENCE ===== -->
+      <section class="form-section" id="section-experience">
+        <div class="form-section__header">
+          <div class="form-section__icon">💼</div>
+          <div>
+            <h2 class="form-section__title">Experience</h2>
+            <p class="form-section__subtitle">Work or internship experience <span class="form-label__optional">(optional)</span></p>
+          </div>
+        </div>
+
+        <div class="dynamic-list" id="experienceList">
+          <!-- Experience items inserted by JS -->
+        </div>
+        <button type="button" class="btn-add" id="addExperienceBtn">
+          <span>＋</span> Add Experience
+        </button>
+      </section>
+
+      <!-- ===== JOB DESCRIPTION ===== -->
+      <section class="form-section" id="section-jobdesc">
+        <div class="form-section__header">
+          <div class="form-section__icon">🎯</div>
+          <div>
+            <h2 class="form-section__title">Target Job Description</h2>
+            <p class="form-section__subtitle">Paste the job listing so the AI can tailor your resume</p>
+          </div>
+        </div>
+
+        <div class="form-grid form-grid--single">
+          <div class="form-group">
+            <label class="form-label" for="jobDescription">Job Description</label>
+            <textarea class="form-textarea" id="jobDescription" name="jobDescription" rows="8" placeholder="Paste the full job description here…" required></textarea>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== SUBMIT ===== -->
+      <div class="submit-section">
+        <button type="submit" class="btn-submit" id="submitBtn">
+          <span class="btn-submit__content">
+            <span>✨</span>
+            <span>Generate My Resume</span>
+          </span>
+        </button>
+      </div>
+
+    </form>
+  </div>
+
+  <!-- Loading Overlay -->
+  <div class="loading-overlay" id="loadingOverlay">
+    <div class="loading-card">
+      <div class="loading-spinner"></div>
+      <h3 class="loading-title">Generating Your Resume</h3>
+      <p class="loading-subtitle">AI is crafting a tailored resume for you…</p>
+      <div class="loading-steps">
+        <div class="loading-step active" id="step1">
+          <span class="loading-step__icon">◉</span>
+          <span>Analyzing job description…</span>
+        </div>
+        <div class="loading-step" id="step2">
+          <span class="loading-step__icon">○</span>
+          <span>Matching your skills…</span>
+        </div>
+        <div class="loading-step" id="step3">
+          <span class="loading-step__icon">○</span>
+          <span>Generating resume HTML…</span>
+        </div>
+        <div class="loading-step" id="step4">
+          <span class="loading-step__icon">○</span>
+          <span>Converting to DOCX…</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast" id="toast"></div>
+
+  <script src="script.js"></script>
+</body>
+</html>
