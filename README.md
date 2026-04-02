@@ -1,4 +1,4 @@
-# 🤖 AI Resume Generator (n8n + Gemini API)
+# AI Resume Generator (n8n + Gemini API)
 
 An automated AI-powered resume generator that creates ATS-optimized resumes tailored to specific job descriptions using Google's Gemini API and n8n workflow automation.
 
